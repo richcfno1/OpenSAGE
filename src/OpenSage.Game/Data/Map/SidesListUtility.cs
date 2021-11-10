@@ -103,7 +103,7 @@ namespace OpenSage.Data.Map
             {
                 var playerSetting = playerSettings[i];
 
-                var factionPlayer = originalMapPlayers.Single(x => (string) x.Properties["playerFaction"].Value == playerSetting.SideName);
+                var factionPlayer = originalMapPlayers.FirstOrDefault(x => (string) x.Properties["playerFaction"].Value == playerSetting.SideName);
 
                 var isHuman = playerSetting.Owner == PlayerOwner.Player;
 
@@ -165,7 +165,7 @@ namespace OpenSage.Data.Map
                 mapPlayers[i + 2].Properties.AddAsciiString("playerEnemies", playerEnemies[i]);
             }
 
-            var originalMapScriptLists = mapFile.SidesList.PlayerScripts.ScriptLists;
+            var originalMapScriptLists = mapFile.SidesList.PlayerScripts?.ScriptLists;
 
             var playerNames = mapPlayers
                 .Select(p => p.Properties.GetPropOrNull("playerName")?.Value.ToString())
@@ -176,8 +176,25 @@ namespace OpenSage.Data.Map
                 mapScriptLists.Add(null);
             }
 
-            // Copy neutral player scripts.
+            // Create teams
             var neutralPlayerName = (string) mapPlayers[0].Properties["playerName"].Value;
+            var civilianPlayerName = (string) mapPlayers[1].Properties["playerName"].Value;
+
+            // Skip neutral and civilian players.
+            for (var i = 2; i < mapPlayers.Count; i++)
+            {
+                if ((bool) mapPlayers[i].Properties["playerIsHuman"].Value)
+                {
+                    mapTeams.Add(CreateDefaultTeam((string) mapPlayers[i].Properties["playerName"].Value));
+                }
+            }
+
+            mapTeams.Add(CreateDefaultTeam("ReplayObserver"));
+
+            mapTeams.Add(CreateDefaultTeam(neutralPlayerName));
+            mapTeams.Add(CreateDefaultTeam(civilianPlayerName));
+
+            // Copy neutral player scripts.
             CopyScripts(
                 originalMapScriptLists,
                 playerNames,
@@ -187,7 +204,6 @@ namespace OpenSage.Data.Map
                 appendIndex: false);
 
             // Copy civilian player scripts.
-            var civilianPlayerName = (string) mapPlayers[1].Properties["playerName"].Value;
             CopyScripts(
                 originalMapScriptLists,
                 playerNames,
@@ -224,15 +240,8 @@ namespace OpenSage.Data.Map
                             mapScriptLists,
                             i,
                             appendIndex: true);
-
-                        mapTeams.Add(CreateDefaultTeam((string) mapPlayers[i].Properties["playerName"].Value));
                     }
                 }
-
-                mapTeams.Add(CreateDefaultTeam("ReplayObserver"));
-
-                mapTeams.Add(CreateDefaultTeam(neutralPlayerName));
-                mapTeams.Add(CreateDefaultTeam(civilianPlayerName));
 
                 // Skip neutral and civilian players.
                 for (var i = 2; i < mapPlayers.Count; i++)
@@ -306,6 +315,11 @@ namespace OpenSage.Data.Map
             int targetPlayerIndex,
             bool appendIndex)
         {
+            if(scriptsList == null)
+            {
+                return;
+            }
+
             var sourcePlayerIndex = Array.FindIndex(playerNames, p => p.Equals(sourcePlayerName, StringComparison.OrdinalIgnoreCase));
             if (sourcePlayerIndex >= 0)
             {
