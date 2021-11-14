@@ -40,7 +40,7 @@ namespace OpenSage.Data.Map
         [AddedIn(SageGame.Bfme)]
         public BuildLists BuildLists { get; private set; }
 
-        public ObjectsList ObjectsList { get; private set; }
+        public ObjectsList ObjectsList { get; set; }
 
         // Either PolygonTriggers (Generals, ZH, BFME I) or TriggerAreas + StandingWaterAreas + RiverAreas + StandingWaveAreas (BFME II and later)
         public PolygonTriggers PolygonTriggers { get; private set; }

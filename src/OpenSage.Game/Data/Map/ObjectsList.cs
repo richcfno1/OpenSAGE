@@ -7,7 +7,7 @@ namespace OpenSage.Data.Map
     {
         public const string AssetName = "ObjectsList";
 
-        public MapObject[] Objects { get; private set; }
+        public MapObject[] Objects { get; set; }
 
         internal static ObjectsList Parse(BinaryReader reader, MapParseContext context)
         {
